@@ -65,22 +65,43 @@
         loadMD('Samplers_and_Scheduler_documentation.md'),
         loadMD('Samplers_and_Scheduler_documentation_ja.md')
       ]);
-      // Render markdown to HTML and sanitize it
-      try {
-        document.getElementById('en-markdown').innerHTML = DOMPurify.sanitize(marked.parse(en));
-      } catch (e) {
-        document.getElementById('en-markdown').innerText = en;
+      // Render markdown to HTML using GitHub API first, fallback to marked, and sanitize
+      async function renderMarkdown(md) {
+        // Try GitHub API
+        try {
+          const resp = await fetch('https://api.github.com/markdown', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ text: md, mode: 'gfm' })
+          });
+          if (resp.ok) {
+            const html = await resp.text();
+            return DOMPurify.sanitize(html);
+          } else {
+            // Non-OK (rate limit, etc.) -> fall through to local parser
+            console.warn('GitHub markdown API returned', resp.status);
+          }
+        } catch (err) {
+          // Likely CORS or network error
+          console.warn('GitHub markdown API failed:', err.message);
+        }
+        // Fallback to marked
+        try {
+          const html = marked.parse(md);
+          return DOMPurify.sanitize(html);
+        } catch (e) {
+          // As a last resort, return escaped text
+          const div = document.createElement('div');
+          div.innerText = md;
+          return div.innerHTML;
+        }
       }
-      try {
-        document.getElementById('zh-markdown').innerHTML = DOMPurify.sanitize(marked.parse(zh));
-      } catch (e) {
-        document.getElementById('zh-markdown').innerText = zh;
-      }
-      try {
-        document.getElementById('ja-markdown').innerHTML = DOMPurify.sanitize(marked.parse(ja));
-      } catch (e) {
-        document.getElementById('ja-markdown').innerText = ja;
-      }
+
+      document.getElementById('en-markdown').innerHTML = await renderMarkdown(en);
+      document.getElementById('zh-markdown').innerHTML = await renderMarkdown(zh);
+      document.getElementById('ja-markdown').innerHTML = await renderMarkdown(ja);
     }
     
 
