@@ -31,6 +31,8 @@
     </section>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@2.4.0/dist/purify.min.js"></script>
   <script>
     function setupLangSwitch() {
       document.querySelectorAll('.lang-switch button').forEach(btn => {
@@ -63,9 +65,22 @@
         loadMD('Samplers_and_Scheduler_documentation.md'),
         loadMD('Samplers_and_Scheduler_documentation_ja.md')
       ]);
-      document.getElementById('en-markdown').innerText = en;
-      document.getElementById('zh-markdown').innerText = zh;
-      document.getElementById('ja-markdown').innerText = ja;
+      // Render markdown to HTML and sanitize it
+      try {
+        document.getElementById('en-markdown').innerHTML = DOMPurify.sanitize(marked.parse(en));
+      } catch (e) {
+        document.getElementById('en-markdown').innerText = en;
+      }
+      try {
+        document.getElementById('zh-markdown').innerHTML = DOMPurify.sanitize(marked.parse(zh));
+      } catch (e) {
+        document.getElementById('zh-markdown').innerText = zh;
+      }
+      try {
+        document.getElementById('ja-markdown').innerHTML = DOMPurify.sanitize(marked.parse(ja));
+      } catch (e) {
+        document.getElementById('ja-markdown').innerText = ja;
+      }
     }
 
     init();
