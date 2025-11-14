@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Samplers & Schedulers Docs</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="header">
+    <div class="lang-switch">
+      <button data-lang="en" class="active">EN</button>
+      <button data-lang="zh">中文</button>
+      <button data-lang="ja">日本語</button>
+    </div>
+    <h1 id="title">Samplers & Schedulers</h1>
+  </div>
+
+  <main>
+    <section id="content-en" class="content lang-content">
+      <h2>English</h2>
+      <div id="en-markdown"></div>
+    </section>
+    <section id="content-zh" class="content lang-content hidden">
+      <h2>中文</h2>
+      <div id="zh-markdown"></div>
+    </section>
+    <section id="content-ja" class="content lang-content hidden">
+      <h2>日本語</h2>
+      <div id="ja-markdown"></div>
+    </section>
+  </main>
+
+  <script>
+    function setupLangSwitch() {
+      document.querySelectorAll('.lang-switch button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.lang-switch button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const lang = btn.getAttribute('data-lang');
+          document.querySelectorAll('.lang-content').forEach(sec => sec.classList.add('hidden'));
+          const target = document.getElementById('content-' + lang);
+          if (target) target.classList.remove('hidden');
+        });
+      });
+    }
+
+    async function loadMD(path) {
+      try {
+        const r = await fetch(path);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return await r.text();
+      } catch (err) {
+        return `Failed to load ${path}: ${err.message}. If you opened the file via file:// the browser may block local fetches. Run a local HTTP server, e.g. ` +
+               "`python -m http.server` or `npx http-server .` and open via http://localhost:8000/`";
+      }
+    }
+
+    async function init() {
+      setupLangSwitch();
+      const [en, zh, ja] = await Promise.all([
+        loadMD('Samplers_and_Schedulers_documentation_en.md'),
+        loadMD('Samplers_and_Scheduler_documentation.md'),
+        loadMD('Samplers_and_Scheduler_documentation_ja.md')
+      ]);
+      document.getElementById('en-markdown').innerText = en;
+      document.getElementById('zh-markdown').innerText = zh;
+      document.getElementById('ja-markdown').innerText = ja;
+    }
+
+    init();
+  </script>
+</body>
+</html>
